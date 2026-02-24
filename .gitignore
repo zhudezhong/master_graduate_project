@@ -1,0 +1,67 @@
+## Core latex/pdflatex auxiliary files
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+
+## Intermediate documents
+*.dvi
+*.xdv
+*-converted-to.*
+# %&-line extension files
+*.fmt
+*.mex
+*.pdm
+*.nom
+*.sty
+*.cls
+
+## Bibliography additional files (if multibib used)
+*.bst
+*.bib
+
+## Sectioning/index/glossary
+*.ind
+*.idx
+*.ilg
+*.nlo
+*.nls
+*.glg
+*.glo
+*.gls
+*.ist
+
+## Knitr
+*-ticks.texi
+
+## pdfLaTeX/XeLaTeX/LuaLaTeX/etc
+*.pdf
+*.pdfsync
+
+## SyncTeX
+*.synctex
+*.synctex.gz
+*.synctex(busy)
+
+## Tools
+*.fdb_latexmk
+*.makefile
+
+## VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+## OS related
+.DS_Store
