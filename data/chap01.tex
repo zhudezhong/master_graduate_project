@@ -1,0 +1,59 @@
+%!TEX root = ../thesis.tex
+\chapter{绪论}
+
+\section*{模板的介绍}
+
+\textsc{scnu-cs-thesis} 旨在提供规范的华南师范大学计算机科学与软件工程的硕士与博士论文的 LATEX 写作模板环境，根据华南师范大学研究生学位论文撰规范 2024 版本修订。
+
+本模板参考了 SCNUThesish 项目，并根据最新的规范进行了修改。
+
+\section*{变量设置}
+
+\subsection*{学位类型}
+
+% 在 `thesis.tex` 文件中通过 `documentclass` 设置。
+
+在 \verb|thesis.tex| 文件中通过 \verb|documentclass| 设置。
+
+例如，硕士学位论文：
+
+\begin{lstlisting}[language=TeX]
+\documentclass[master,vista,ttf,twoside]{scnuthesis}
+\end{lstlisting}
+
+博士学位论文：
+
+\begin{lstlisting}[language=TeX]
+\documentclass[doctor,vista,ttf,twoside]{scnuthesis}
+\end{lstlisting}
+
+\subsection*{基本信息}
+
+基本信息用于生成封面、摘要等包含作者、导师等信息的页面。在 \verb|data/info.tex| 文件中设置。
+
+\subsection*{答辩合格证明}
+
+答辩合格证明中需要填写答辩委员会成员，在 \verb|data/committee.tex| 文件中设置。
+
+\section*{使用说明}
+
+在 \verb|myscnu.sty| 中添加你写论文需要的包。
+
+在 \verb|data/abstract.tex| 中撰写摘要。
+
+在 \verb|data/chap01.tex| 中撰写第一章内容，其余章节类似。
+
+在 \verb|data/appendix.tex| 中撰写附录内容。
+
+其余内容类似，请参考 \verb|thesis.tex| 文件。
+
+在写完所有内容之后，在项目根目录下执行下面的命令：
+
+\begin{lstlisting}[language=bash]
+xelatex thesis.tex
+\end{lstlisting}
+
+安装 \verb|xelatex| 的方法参考下一节。
+
+也可以使用 \url{https://textpage.com} 等在线编辑器编译。
+
