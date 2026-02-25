@@ -1,34 +1,66 @@
 %!TEX root = ../thesis.tex
 \begin{cabstract}
-华南师范大学是一所有着悠久历史和深厚人文底蕴的高等学府，学校地处中国改革开放之%
-都——广州，深得岭南开放务实之精神，有着素朴的传统和良好的学风，七十多年来，学校坚%
-持师范教育的特色，始终致力于培养人格健全、有思想、有能力、有社会责任感的优秀人才。%
+在大规模多媒体数据持续增长的背景下，哈希检索因其低存储开销与高检索效率，已成为近似最近邻检索的重要技术路线。
+然而，现有多数哈希方法基于静态数据分布假设，难以适应真实场景中数据流持续到达、类别空间动态扩展及样本分布随时间演化的复杂环境。
+当概念漂移发生时，既有模型学习到的语义邻接关系会逐步失效，导致检索精度下降；同时，传统动态更新策略常依赖历史样本重编码或全库重构，带来较高计算代价，
+难以满足在线检索的实时性需求。围绕“概念漂移条件下如何实现高效且稳定的动态哈希检索”这一核心问题，本文从单模态与跨模态两个层面开展系统研究。
 
-在大学日益参与经济社会发展的新世纪，华南师范大学正以崭新的风貌、开阔的世界眼光，%
-不断拓展大学的育人理念，创造良好的教学和包容的学术研究环境，营造丰富的校园文化，%
-努力构建特色鲜明、开放式、综合性高水平教学研究型大学。%
+针对单模态图像检索场景，本文提出半监督概念保留动态哈希方法（Semi-supervised Concept Preserving Hashing, SCPH）。
+该方法在概念保留框架下引入半监督机制：首先，利用哈达玛矩阵为各类别分配固定概念编码，构建类别在汉明空间中的稳定语义锚点；
+其次，针对未标注样本，基于K近邻关系生成伪标签，并与真实标签共同构建概念参考矩阵；最后，通过同构相似性保持、目标编码一致性与哈希均衡性联合优化学习哈希函数，
+实现对新到达数据的有效建模。SCPH在模型更新过程中保持历史样本哈希码无需重算，能够在控制系统开销的同时，提升标签稀缺条件下对概念漂移的鲁棒性与检索稳定性。
+
+进一步面向动态跨模态检索任务，本文提出基于多表结构的增量跨模态哈希方法（Multi-table based Incremental Hashing, MIH）。
+该方法构建固定规模多哈希表系统，在时间维度并行保留不同时期学习得到的跨模态语义结构，以缓解单模型持续更新带来的灾难性遗忘；
+同时，依据各哈希表在最新数据上的语义保持能力动态分配表权重，并在检索阶段引入查询自适应加权机制，利用查询样本与哈希超平面的关系增强比特位判别能力，
+从而获得更精细的加权汉明距离度量。通过“历史信息保留—当前分布适配—查询级细粒度加权”的协同机制，MIH有效提升了概念漂移环境下跨模态检索的精度与稳定性。
+
+在实验验证方面，本文分别基于CIFAR-10/CIFAR-100与MIRFlickr/MSCOCO构建“新类出现”和“数据分布改变”两类典型概念漂移场景，
+对比多种静态与动态哈希基线方法。实验结果表明：SCPH与MIH在多时间步检索过程中均能保持更优或更稳定的性能表现；在概念漂移发生后的关键阶段，
+所提方法表现出更强的自适应能力；消融实验进一步验证了概念约束、多表保留、模态一致性加权与查询自适应加权等关键模块的有效性。
+
+综上所述，本文研究为概念漂移条件下动态哈希检索的模型设计与工程实现提供了可行路径，对开放、动态数据环境中的高效智能检索具有一定理论意义与应用价值。
 \end{cabstract}
-\ckeywords{华南师范大学；论文；模板}
-
+\ckeywords{概念漂移；动态哈希检索；半监督学习；跨模态检索；增量学习；多哈希表}
 \begin{eabstract}
-  South China Normal University is an institution of higher education with a
-  long history and a rich legacy. Situated in Guangzhou, the open metropolis in
-  South China, South China Normal University is imbued with Lingnan's
-  pioneering and pragmatic spirits. It has developed a tradition of elegant
-  simplicity and fostered a strong learning environment. In the past seventy
-  years or so, South China Normal University has preserved its characteristics
-  of teacher education and has been devoted to cultivating talents with moral
-  integrity, independent thinking, innovative ability and sense of social
-  responsibility.
+In the context of continuously growing large-scale multimedia data, hashing-based retrieval has become an important technical 
+route for approximate nearest neighbor search due to its low storage cost and high retrieval efficiency. However, most existing 
+hashing methods are built on a static data distribution assumption, making them difficult to adapt to real-world environments 
+where data streams arrive continuously, category spaces expand dynamically, and sample distributions evolve over time. 
+When concept drift occurs, the semantic neighborhood relationships learned by existing models gradually become invalid, 
+leading to performance degradation. Meanwhile, traditional dynamic update strategies often rely on historical sample re-encoding 
+or full-database reconstruction, which incurs high computational cost and cannot satisfy the real-time requirements of online retrieval. 
+Centered on the core problem of how to achieve efficient and stable dynamic hashing retrieval under concept drift, 
+this thesis conducts a systematic study from both single-modal and cross-modal perspectives.
 
-  In the new century in which the institutions of higher education are getting
-  increasingly involved in the social and economic development, South China
-  Normal University has adopted an international view on education. Having
-  broadened its horizon on the key issue of cultivating talents, it has made its
-  greatest efforts to create a congenial and harmonious environment for both
-  teaching and academic research and has fostered a rich variety of campus
-  culture. It aims to build itself into a high-level comprehensive teaching and
-  research-oriented university with open distinctive features.
+For single-modal image retrieval, we propose a Semi-supervised Concept Preserving Hashing method (SCPH). 
+Under a concept-preserving framework, SCPH introduces a semi-supervised mechanism: first, 
+it uses a Hadamard matrix to assign fixed concept codes to each category, constructing stable semantic anchors in Hamming space; 
+second, for unlabeled samples, it generates pseudo-labels based on K-nearest neighbor relations and jointly builds a concept 
+reference matrix with real labels; finally, it learns hash functions by jointly optimizing intra-structure similarity preservation, 
+target code consistency, and hash balance, thereby effectively modeling newly arriving data. During model updates, 
+SCPH keeps historical hash codes unchanged, which controls system overhead while improving robustness and retrieval 
+stability under concept drift, especially when labeled data are limited.
+
+For dynamic cross-modal retrieval, we further propose a Multi-table based Incremental Hashing method (MIH). 
+MIH constructs a fixed-size multi-hash-table system that preserves cross-modal semantic structures learned at different stages in 
+parallel along the temporal dimension, alleviating catastrophic forgetting caused by continuous updates of a single model. 
+Meanwhile, it dynamically assigns table weights according to each table’s semantic preservation capability on newly arrived data, 
+and introduces a query-adaptive weighting mechanism during retrieval. By leveraging the relationship between query samples and hash 
+hyperplanes to enhance bit-level discriminability, MIH yields a more fine-grained weighted Hamming distance metric. 
+Through a collaborative mechanism of historical information retention, current distribution adaptation, and query-level fine-grained weighting, 
+MIH effectively improves retrieval accuracy and stability in concept-drifting cross-modal environments.
+
+In the experimental evaluation, we construct two typical concept drift scenarios—new class emergence and data distribution 
+shift—on CIFAR-10/CIFAR-100 and MIRFlickr/MSCOCO, and compare with multiple static and dynamic hashing baselines. 
+Results show that both SCPH and MIH maintain better or more stable performance over multiple time steps; at key 
+stages after concept drift occurs, the proposed methods demonstrate stronger adaptability. Ablation studies further 
+verify the effectiveness of key components, including concept constraints, multi-table retention, 
+modality-consistency weighting, and query-adaptive weighting.
+
+In summary, this work provides a feasible approach for model design and engineering implementation of 
+dynamic hashing retrieval under concept drift, and offers theoretical significance and practical value for 
+efficient intelligent retrieval in open and dynamic data environments.
 \end{eabstract}
-\ekeywords{South China Normal University (SCNU); thesis; template}
+\ekeywords{Concept Drift; Online Hash Retrieval; Semi-supervised Learning; Cross-modal Retrieval; Incremental Learning; Muti-hash Table}
 

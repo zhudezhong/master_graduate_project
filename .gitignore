@@ -27,6 +27,9 @@
 ## Bibliography additional files (if multibib used)
 *.bst
 *.bib
+*.bbl
+*.blg
+*.thm
 
 ## Sectioning/index/glossary
 *.ind
