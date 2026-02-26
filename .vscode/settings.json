@@ -26,5 +26,9 @@
         "%DIR%/",
         "%TMPFILE%",
         "-y=defaultIndent:\"  \""
-    ]
+    ],
+    "[latex]": {
+        "editor.wordWrap": "wordWrapColumn",
+        "editor.wordWrapColumn": 100
+    }
 }

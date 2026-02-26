@@ -64,6 +64,11 @@
 
 \documentclass[master,ttf,twoside]{scnuthesis}
 \usepackage{myscnu}
+% 保留“章前换页”，但取消 twoside 下的“补空白页到右页”行为
+\let\cleardoublepage\clearpage
+\let\cleardoublepagemp\clearpage
+% 全文公式编号格式：章号-序号（如 2-1）
+\renewcommand{\theequation}{\thechapter-\arabic{equation}}
 \begin{document}
 \graphicspath{{figures/}}
 \input{data/info}
@@ -79,8 +84,8 @@
 
 % 生成目录
 \tableofcontents
-\listoftables           % 如果要生成表目录
-\listoffigures          % 如果要生成图目录
+% \listoftables           % 如果要生成表目录
+% \listoffigures          % 如果要生成图目录
 
 % 书写正文，可以根据需要增添章节。
 \mainmatter
@@ -88,19 +93,14 @@
 \input{data/chap02}
 \input{data/chap03_scph}
 \input{data/chap04_mih}
-
+\input{data/chap05}
 % 参考文献
-\cleardoublepagemp
+\clearpage
 \renewcommand{\chapterlabel}{\bibname} % 设置参考文献的页眉
 \nocite{*}
 \bibliographystyle{bstutf8}
 \bibliography{ref/refs.bib}
 
-% 附录
-\appendix
-\backmatter
-\input{data/appendix01}
-\input{data/appendix02}
 
 % 致谢
 \cleardoublepagemp
@@ -111,16 +111,15 @@
 \cleardoublepagemp
 \renewcommand{\chapterlabel}{\resumename} % 设置作者个人成果的页眉
 \input{data/resume}
-
 % 确保 plain 样式确实没有页眉
 \renewpagestyle{plain}{
   \sethead{}{}{}
   \setfoot{}{{\songti \wuhao \thepage}}{}%
 }
-
 % 华南师范大学学位论文原创性声明
 \cleardoublepage
 \renewcommand{\chapterlabel}{\statementname} % 设置作者论文原创性声明页眉
+\addcontentsline{toc}{chapter}{\statementname}
 \input{data/statement}
 
 \end{document}

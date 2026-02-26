@@ -30,7 +30,7 @@ where data streams arrive continuously, category spaces expand dynamically, and 
 When concept drift occurs, the semantic neighborhood relationships learned by existing models gradually become invalid, 
 leading to performance degradation. Meanwhile, traditional dynamic update strategies often rely on historical sample re-encoding 
 or full-database reconstruction, which incurs high computational cost and cannot satisfy the real-time requirements of online retrieval. 
-Centered on the core problem of how to achieve efficient and stable dynamic hashing retrieval under concept drift, 
+Centered on the core problem of how to achieve efficient and stable online hashing retrieval under concept drift, 
 this thesis conducts a systematic study from both single-modal and cross-modal perspectives.
 
 For single-modal image retrieval, we propose a Semi-supervised Concept Preserving Hashing method (SCPH). 
@@ -42,7 +42,7 @@ target code consistency, and hash balance, thereby effectively modeling newly ar
 SCPH keeps historical hash codes unchanged, which controls system overhead while improving robustness and retrieval 
 stability under concept drift, especially when labeled data are limited.
 
-For dynamic cross-modal retrieval, we further propose a Multi-table based Incremental Hashing method (MIH). 
+For online cross-modal retrieval, we further propose a Multi-table based Incremental Hashing method (MIH). 
 MIH constructs a fixed-size multi-hash-table system that preserves cross-modal semantic structures learned at different stages in 
 parallel along the temporal dimension, alleviating catastrophic forgetting caused by continuous updates of a single model. 
 Meanwhile, it dynamically assigns table weights according to each table’s semantic preservation capability on newly arrived data, 
@@ -52,14 +52,14 @@ Through a collaborative mechanism of historical information retention, current d
 MIH effectively improves retrieval accuracy and stability in concept-drifting cross-modal environments.
 
 In the experimental evaluation, we construct two typical concept drift scenarios—new class emergence and data distribution 
-shift—on CIFAR-10/CIFAR-100 and MIRFlickr/MSCOCO, and compare with multiple static and dynamic hashing baselines. 
+shift—on CIFAR-10/CIFAR-100 and MIRFlickr/MSCOCO, and compare with multiple static and online hashing baselines. 
 Results show that both SCPH and MIH maintain better or more stable performance over multiple time steps; at key 
 stages after concept drift occurs, the proposed methods demonstrate stronger adaptability. Ablation studies further 
 verify the effectiveness of key components, including concept constraints, multi-table retention, 
 modality-consistency weighting, and query-adaptive weighting.
 
 In summary, this work provides a feasible approach for model design and engineering implementation of 
-dynamic hashing retrieval under concept drift, and offers theoretical significance and practical value for 
+online hashing retrieval under concept drift, and offers theoretical significance and practical value for 
 efficient intelligent retrieval in open and dynamic data environments.
 \end{eabstract}
 \ekeywords{Concept Drift; Online Hash Retrieval; Semi-supervised Learning; Cross-modal Retrieval; Incremental Learning; Muti-hash Table}
