@@ -68,3 +68,7 @@
 
 ## OS related
 .DS_Store
+
+## Keep references tracked
+!ref/refs.bib
+!ref/**

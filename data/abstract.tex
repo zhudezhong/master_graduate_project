@@ -7,17 +7,11 @@
 
 针对单模态图像检索场景，本文提出半监督概念保留动态哈希方法（Semi-supervised Concept Preserving Hashing, SCPH）。
 该方法在概念保留框架下引入半监督机制：首先，利用哈达玛矩阵为各类别分配固定概念编码，构建类别在汉明空间中的稳定语义锚点；
-其次，针对未标注样本，基于K近邻关系生成伪标签，并与真实标签共同构建概念参考矩阵；最后，通过同构相似性保持、目标编码一致性与哈希均衡性联合优化学习哈希函数，
-实现对新到达数据的有效建模。SCPH在模型更新过程中保持历史样本哈希码无需重算，能够在控制系统开销的同时，提升标签稀缺条件下对概念漂移的鲁棒性与检索稳定性。
+其次，针对未标注样本，基于K近邻关系生成伪标签，并与真实标签共同构建概念参考矩阵；最后，通过同构相似性保持、目标编码一致性与哈希均衡性联合优化学习哈希函数，实现对新到达数据的有效建模。SCPH在模型更新过程中保持历史样本哈希码无需重新计算，能够在控制系统开销的同时，提升标签稀缺条件下对概念漂移的鲁棒性与检索稳定性。
 
-进一步面向动态跨模态检索任务，本文提出基于多表结构的增量跨模态哈希方法（Multi-table based Incremental Hashing, MIH）。
-该方法构建固定规模多哈希表系统，在时间维度并行保留不同时期学习得到的跨模态语义结构，以缓解单模型持续更新带来的灾难性遗忘；
-同时，依据各哈希表在最新数据上的语义保持能力动态分配表权重，并在检索阶段引入查询自适应加权机制，利用查询样本与哈希超平面的关系增强比特位判别能力，
-从而获得更精细的加权汉明距离度量。通过“历史信息保留—当前分布适配—查询级细粒度加权”的协同机制，MIH有效提升了概念漂移环境下跨模态检索的精度与稳定性。
+进一步面向动态跨模态检索任务，本文提出基于多表结构的增量跨模态哈希方法（Multi-table based Incremental Hashing, MIH）。该方法构建固定规模多哈希表系统，在时间维度并行保留不同时期学习得到的跨模态语义结构，以缓解单模型持续更新带来的灾难性遗忘；同时，依据各哈希表在最新数据上的语义保持能力动态分配表权重，并在检索阶段引入查询自适应加权机制，利用查询样本与哈希超平面的关系增强比特位判别能力，从而获得更精细的加权汉明距离度量。通过“历史信息保留—当前数据分布适配—查询级细粒度加权”的协同机制，MIH有效提升了概念漂移环境下跨模态检索的精度与稳定性。
 
-在实验验证方面，本文分别基于CIFAR-10/CIFAR-100与MIRFlickr/MSCOCO构建“新类出现”和“数据分布改变”两类典型概念漂移场景，
-对比多种静态与动态哈希基线方法。实验结果表明：SCPH与MIH在多时间步检索过程中均能保持更优或更稳定的性能表现；在概念漂移发生后的关键阶段，
-所提方法表现出更强的自适应能力；消融实验进一步验证了概念约束、多表保留、模态一致性加权与查询自适应加权等关键模块的有效性。
+在实验验证方面，本文分别基于CIFAR-10/CIFAR-100与MIRFlickr/MSCOCO构建了“新类出现”和“数据分布改变”两类典型概念漂移场景，与多种静态与动态哈希基线方法进行对比。实验结果表明：SCPH与MIH在多时间步检索过程中均能保持更优或更稳定的性能表现；在概念漂移发生后的关键阶段，所提方法表现出更强的自适应能力；消融实验进一步验证了概念约束、多表保留、模态一致性加权与查询自适应加权等关键模块的有效性。
 
 综上，本文提出的 SCPH 与 MIH 在概念漂移场景下均表现出较好的检索性能与稳定性，验证了方法设计的有效性。本文工作可为动态数据环境下哈希检索方法的研究与应用提供参考，对开放、动态数据环境中的高效智能检索具有理论意义与应用价值。
 \end{cabstract}
@@ -48,7 +42,7 @@ parallel along the temporal dimension, alleviating catastrophic forgetting cause
 Meanwhile, it dynamically assigns table weights according to each table’s semantic preservation capability on newly arrived data, 
 and introduces a query-adaptive weighting mechanism during retrieval. By leveraging the relationship between query samples and hash 
 hyperplanes to enhance bit-level discriminability, MIH yields a more fine-grained weighted Hamming distance metric. 
-Through a collaborative mechanism of historical information retention, current distribution adaptation, and query-level fine-grained weighting, 
+Through a collaborative mechanism of historical information retention, current data distribution adaptation, and query-level fine-grained weighting, 
 MIH effectively improves retrieval accuracy and stability in concept-drifting cross-modal environments.
 
 In the experimental evaluation, we construct two typical concept drift scenarios—new class emergence and data distribution 
