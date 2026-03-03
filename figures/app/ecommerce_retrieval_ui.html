@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>电商智能检索系统 - 基于动态哈希</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f1419;
+      --bg-card: #1a2332;
+      --bg-input: #242f3d;
+      --accent-primary: #00d4aa;
+      --accent-secondary: #00a8e8;
+      --accent-warm: #ff6b35;
+      --text-primary: #e8eaed;
+      --text-muted: #8b949e;
+      --border-subtle: rgba(0, 212, 170, 0.2);
+      --shadow-glow: 0 0 40px rgba(0, 212, 170, 0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 212, 170, 0.12), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 50%, rgba(0, 168, 232, 0.08), transparent),
+        radial-gradient(ellipse 60% 40% at 0% 80%, rgba(255, 107, 53, 0.06), transparent);
+    }
+
+    .header {
+      padding: 2rem 3rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--bg-dark);
+    }
+
+    .logo-text h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-text p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .model-badges {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 0.4rem 0.9rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--accent-primary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 3rem 4rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      padding: 0.4rem;
+      background: var(--bg-card);
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      width: fit-content;
+    }
+
+    .tab {
+      padding: 0.85rem 1.6rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.25s ease;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+      background: rgba(0, 212, 170, 0.08);
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, rgba(0, 212, 170, 0.25), rgba(0, 168, 232, 0.15));
+      color: var(--accent-primary);
+      border: 1px solid rgba(0, 212, 170, 0.4);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .search-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .search-panel h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .search-panel h3 .icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--border-subtle);
+      border-radius: 16px;
+      padding: 3rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: var(--bg-input);
+    }
+
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--accent-primary);
+      background: rgba(0, 212, 170, 0.06);
+    }
+
+    .upload-zone .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.7;
+    }
+
+    .upload-zone p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .upload-zone .hint {
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+      opacity: 0.7;
+    }
+
+    .upload-preview {
+      max-width: 300px;
+      max-height: 200px;
+      margin: 1rem auto;
+      border-radius: 12px;
+      display: none;
+    }
+
+    .upload-preview.show {
+      display: block;
+    }
+
+    .text-input-wrapper {
+      display: flex;
+      gap: 1rem;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+
+    .text-input-wrapper textarea {
+      flex: 1;
+      min-width: 280px;
+      min-height: 120px;
+      padding: 1rem 1.2rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.95rem;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+
+    .text-input-wrapper textarea::placeholder {
+      color: var(--text-muted);
+      opacity: 0.8;
+    }
+
+    .text-input-wrapper textarea:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.15);
+    }
+
+    .btn-search {
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, var(--accent-primary), #00b894);
+      border: none;
+      border-radius: 12px;
+      color: var(--bg-dark);
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      align-self: flex-end;
+    }
+
+    .btn-search:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 212, 170, 0.35);
+    }
+
+    .btn-search:active {
+      transform: translateY(0);
+    }
+
+    .product-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .product-option {
+      aspect-ratio: 1;
+      border: 2px solid var(--border-subtle);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      background: var(--bg-input);
+    }
+
+    .product-option:hover {
+      border-color: var(--accent-primary);
+      transform: scale(1.03);
+    }
+
+    .product-option.selected {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.2);
+    }
+
+    .product-option img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .results-section {
+      margin-top: 2rem;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .results-header h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .latency-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--accent-primary);
+      padding: 0.4rem 0.8rem;
+      background: rgba(0, 212, 170, 0.12);
+      border-radius: 8px;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .product-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .product-card:hover {
+      border-color: var(--accent-primary);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .product-card .img-wrap {
+      aspect-ratio: 1;
+      background: var(--bg-input);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .product-card .img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-card .similarity-tag {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: rgba(0, 0, 0, 0.7);
+      color: var(--accent-primary);
+      font-size: 0.75rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .product-card .info {
+      padding: 1rem;
+    }
+
+    .product-card .title {
+      font-size: 0.92rem;
+      font-weight: 500;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-card .price {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-warm);
+      margin-top: 0.5rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border: 1px dashed var(--border-subtle);
+      border-radius: 16px;
+    }
+
+    .empty-state .icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .footer-note {
+      margin-top: 3rem;
+      padding: 1.5rem 0;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .header, .main-container {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+      }
+      .tabs {
+        width: 100%;
+        overflow-x: auto;
+      }
+      .text-input-wrapper {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo-section">
+      <div class="logo-icon">检索</div>
+      <div class="logo-text">
+        <h1>电商智能检索系统</h1>
+        <p>基于 SCPH 与 MIH 的动态哈希检索 · 论文第五章系统展示</p>
+      </div>
+    </div>
+    <div class="model-badges">
+      <span class="badge">SCPH</span>
+      <span class="badge">MIH</span>
+      <span class="badge">64-bit Hash</span>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="tabs">
+      <button class="tab active" data-tab="similar">相似商品推荐</button>
+      <button class="tab" data-tab="photo">拍照购</button>
+      <button class="tab" data-tab="text">自然语言搜索</button>
+    </div>
+
+    <!-- 相似商品推荐 -->
+    <div class="tab-content active" id="similar">
+      <div class="search-panel">
+        <h3><span class="icon">📷</span> 以图搜图 · 单模态视觉相似检索（SCPH）</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">选择一件商品，系统将基于汉明距离召回视觉风格、款式、纹理相似的商品</p>
+        <div class="product-selector" id="productSelector">
+          <div class="product-option" data-id="1"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&h=200&fit=crop" alt="运动鞋"></div>
+          <div class="product-option" data-id="2"><img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=200&h=200&fit=crop" alt="休闲鞋"></div>
+          <div class="product-option" data-id="3"><img src="https://images.unsplash.com/photo-1560343090-f0409e92791a?w=200&h=200&fit=crop" alt="外套"></div>
+          <div class="product-option" data-id="4"><img src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=200&h=200&fit=crop" alt="背包"></div>
+          <div class="product-option" data-id="5"><img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop" alt="手表"></div>
+          <div class="product-option" data-id="6"><img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=200&h=200&fit=crop" alt="耳机"></div>
+        </div>
+        <button class="btn-search" style="margin-top: 1rem;" id="btnSimilar">检索相似商品</button>
+      </div>
+      <div class="results-section" id="similarResults"></div>
+    </div>
+
+    <!-- 拍照购 -->
+    <div class="tab-content" id="photo">
+      <div class="search-panel">
+        <h3><span class="icon">📱</span> 以图搜商品 · 跨模态检索（MIH）</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">上传自然场景图片或截屏，系统将在共享汉明空间中召回语义匹配的商品</p>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" accept="image/*">
+          <div class="upload-icon">📤</div>
+          <p>拖拽图片到此处，或点击上传</p>
+          <p class="hint">支持 JPG、PNG，建议尺寸 224×224</p>
+          <img class="upload-preview" id="uploadPreview" alt="预览">
+        </div>
+        <button class="btn-search" style="margin-top: 1rem; display: none;" id="btnPhoto">开始拍照购检索</button>
+      </div>
+      <div class="results-section" id="photoResults"></div>
+    </div>
+
+    <!-- 自然语言搜索 -->
+    <div class="tab-content" id="text">
+      <div class="search-panel">
+        <h3><span class="icon">✍️</span> 以文搜商品 · 复杂语义搜索（MIH）</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">输入自然语言描述，系统将跨模态召回符合该语义的商品图像</p>
+        <div class="text-input-wrapper">
+          <textarea id="textQuery" placeholder="例如：适合秋冬季节搭配大衣的复古风粗跟马丁靴"></textarea>
+          <button class="btn-search" id="btnText">检索商品</button>
+        </div>
+      </div>
+      <div class="results-section" id="textResults"></div>
+    </div>
+
+    <p class="footer-note">演示界面 · 基于第五章「电商智能检索系统」设计 · 实际检索需连接后端 API（相似推荐 / 拍照购 / 自然语言搜索）</p>
+  </main>
+
+  <script>
+    // 模拟商品数据
+    const mockProducts = [
+      { id: 1, title: 'Nike Air Max 运动跑鞋 男款', price: '¥899', img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop', similarity: 0.98 },
+      { id: 2, title: 'Adidas 休闲运动鞋 经典款', price: '¥659', img: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop', similarity: 0.92 },
+      { id: 3, title: '复古帆布鞋 高帮板鞋', price: '¥329', img: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop', similarity: 0.88 },
+      { id: 4, title: '秋冬款加厚羽绒服 男女同款', price: '¥1299', img: 'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400&h=400&fit=crop', similarity: 0.95 },
+      { id: 5, title: '简约通勤双肩背包', price: '¥459', img: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=400&fit=crop', similarity: 0.91 },
+      { id: 6, title: '商务休闲皮表带腕表', price: '¥1899', img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop', similarity: 0.87 },
+      { id: 7, title: '无线蓝牙降噪耳机', price: '¥799', img: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=400&fit=crop', similarity: 0.89 },
+      { id: 8, title: '复古风粗跟马丁靴 女款', price: '¥599', img: 'https://images.unsplash.com/photo-1543163521-1bf539c55b56?w=400&h=400&fit=crop', similarity: 0.94 },
+    ];
+
+    function renderProducts(products, containerId) {
+      const container = document.getElementById(containerId);
+      const latency = (Math.random() * 15 + 8).toFixed(1);
+      container.innerHTML = `
+        <div class="results-header">
+          <h3>检索结果 · Top-${products.length}</h3>
+          <span class="latency-badge">P99 延迟: ${latency} ms</span>
+        </div>
+        <div class="results-grid">
+          ${products.map(p => `
+            <div class="product-card">
+              <div class="img-wrap">
+                <img src="${p.img}" alt="${p.title}">
+                ${p.similarity ? `<span class="similarity-tag">${(p.similarity * 100).toFixed(0)}%</span>` : ''}
+              </div>
+              <div class="info">
+                <div class="title">${p.title}</div>
+                <div class="price">${p.price}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderEmpty(containerId, msg = '执行检索以查看结果') {
+      const container = document.getElementById(containerId);
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">🔍</div>
+          <p>${msg}</p>
+        </div>
+      `;
+    }
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // 相似商品推荐
+    let selectedId = 1;
+    document.querySelectorAll('.product-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.product-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        selectedId = opt.dataset.id;
+      });
+    });
+    document.querySelector('.product-option').classList.add('selected');
+
+    document.getElementById('btnSimilar').addEventListener('click', () => {
+      const shuffled = [...mockProducts].sort(() => Math.random() - 0.5).slice(0, 6);
+      renderProducts(shuffled, 'similarResults');
+    });
+
+    // 拍照购
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const btnPhoto = document.getElementById('btnPhoto');
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) handleFile(file);
+    });
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) handleFile(file);
+    });
+
+    function handleFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        uploadPreview.src = e.target.result;
+        uploadPreview.classList.add('show');
+        btnPhoto.style.display = 'inline-block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    btnPhoto.addEventListener('click', () => {
+      const shuffled = [...mockProducts].sort(() => Math.random() - 0.5).slice(0, 6);
+      renderProducts(shuffled, 'photoResults');
+    });
+
+    // 自然语言搜索
+    document.getElementById('btnText').addEventListener('click', () => {
+      const query = document.getElementById('textQuery').value.trim();
+      if (!query) return;
+      const shuffled = [...mockProducts].sort(() => Math.random() - 0.5).slice(0, 6);
+      renderProducts(shuffled, 'textResults');
+    });
+
+    // 初始化空状态
+    renderEmpty('similarResults');
+    renderEmpty('photoResults');
+    renderEmpty('textResults');
+  </script>
+</body>
+</html>
