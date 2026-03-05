@@ -9,8 +9,23 @@ description = "Backend service for cross-modal retrieval system."
 readme = "../README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "confluent-kafka",
+    "fastapi",
+    "httpx",
     "numpy>=2.4.2",
+    "pillow",
+    "pydantic-settings",
+    "pymilvus",
+    "python-multipart",
     "torch",
+    "torchvision",
+    "uvicorn",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
 ]
 
 [tool.uv]
