@@ -64,6 +64,10 @@
 
 \documentclass[master,ttf,twoside]{scnuthesis}
 \usepackage{myscnu}
+\usepackage{bookmark}  % 与 hyperref 配合，减少“Rerun to get outlines right”的重复编译
+% 消除 xeCJK 对 \ttfamily/\sffamily 的警告：指定 CJK 等宽与无衬线字体（macOS 若报错可改为 Kaiti SC / Heiti SC）
+\setCJKmonofont{KaiTi}
+\setCJKsansfont{SimHei}
 % 保留“章前换页”，但取消 twoside 下的“补空白页到右页”行为
 \let\cleardoublepage\clearpage
 \let\cleardoublepagemp\clearpage
@@ -77,7 +81,7 @@
   {第\CJKnumber{\thechapter}章}
   {0.8em}
   {\parbox{\linewidth}{\centering}}
-  [}]
+  []
 \begin{document}
 \graphicspath{{figures/}}
 \input{data/info}
