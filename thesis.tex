@@ -71,6 +71,13 @@
 \renewcommand{\theequation}{\thechapter-\arabic{equation}}
 % 全文图片编号格式：章号-序号（如 图 5-4）
 \renewcommand{\thefigure}{\thechapter-\arabic{figure}}
+% 章标题：章号单独一行居中，标题在第二行居中（过长时多行均居中）
+\titleformat{\chapter}[display]
+  {\centering\heiti\xiaoer[1.25]}
+  {第\CJKnumber{\thechapter}章}
+  {0.8em}
+  {\parbox{\linewidth}{\centering}}
+  [}]
 \begin{document}
 \graphicspath{{figures/}}
 \input{data/info}

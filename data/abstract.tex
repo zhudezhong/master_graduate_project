@@ -3,19 +3,21 @@
 在大规模多媒体数据持续增长的背景下，哈希检索因其低存储开销与高检索效率，已成为近似最近邻检索的重要技术路线。
 然而，现有多数哈希方法基于静态数据分布假设，难以适应真实场景中数据流持续到达、类别空间动态扩展及样本分布随时间演化的复杂环境。
 当概念漂移发生时，既有模型学习到的语义邻接关系会逐步失效，导致检索精度下降；同时，传统动态更新策略常依赖历史样本重编码或全库重构，带来较高计算代价，
-难以满足在线检索的实时性需求。围绕概念漂移条件下动态哈希检索中的模型更新与语义保持问题，本文从单模态与跨模态两个层面开展研究。
+难以满足在线检索的实时性需求。围绕概念漂移条件下在线哈希检索中的模型更新与语义保持问题，本文从单模态、跨模态与系统应用三个层面开展研究。
 
-针对单模态图像检索场景，本文提出半监督概念保留动态哈希方法（Semi-supervised Concept Preserving Hashing, SCPH）。
+针对单模态图像检索场景，本文提出半监督概念保留哈希方法（Semi-supervised Concept Preserving Hashing, SCPH）。
 该方法在概念保留框架下引入半监督机制：首先，利用哈达玛矩阵为各类别分配固定概念编码，构建类别在汉明空间中的稳定语义锚点；
 其次，针对未标注样本，基于K近邻关系生成伪标签，并与真实标签共同构建概念参考矩阵；最后，通过同构相似性保持、目标编码一致性与哈希均衡性联合优化学习哈希函数，实现对新到达数据的有效建模。SCPH在模型更新过程中保持历史样本哈希码无需重新计算，能够在控制系统开销的同时，提升标签稀缺条件下对概念漂移的鲁棒性与检索稳定性。
 
 进一步面向动态跨模态检索任务，本文提出基于多表结构的增量跨模态哈希方法（Multi-table based Incremental Hashing, MIH）。该方法构建固定规模多哈希表系统，在时间维度并行保留不同时期学习得到的跨模态语义结构，以缓解单模型持续更新带来的灾难性遗忘；同时，依据各哈希表在最新数据上的语义保持能力动态分配表权重，并在检索阶段引入查询自适应加权机制，利用查询样本与哈希超平面的关系增强比特位判别能力，从而获得更精细的加权汉明距离度量。通过“历史信息保留—当前数据分布适配—查询级细粒度加权”的协同机制，MIH有效提升了概念漂移环境下跨模态检索的精度与稳定性。
 
-在实验验证方面，本文分别基于CIFAR-10/CIFAR-100与MIRFlickr/MSCOCO构建了“新类出现”和“数据分布改变”两类典型概念漂移场景，与多种静态与动态哈希基线方法进行对比。实验结果表明：SCPH与MIH在多时间步检索过程中均能保持更优或更稳定的性能表现；在概念漂移发生后的关键阶段，所提方法表现出更强的自适应能力；消融实验进一步验证了概念约束、多表保留、模态一致性加权与查询自适应加权等关键模块的有效性。
+在上述算法研究基础上，本文第五章面向电商场景完成了基于在线哈希的智能检索系统设计与实现。系统以 SCPH 与 MIH 为核心引擎，采用数据接入层、特征工程层、核心哈希引擎层、索引存储层与业务服务层的五层架构，实现了相似商品推荐、拍照购与自然语言搜索三类核心功能，打通“数据接入—特征提取—哈希编码—索引检索—业务服务”的端到端链路。通过系统化测试验证了 SCPH 与 MIH 在工程环境中的可落地性，以及在不重编码历史哈希码前提下的在线增量更新与检索稳定性，为在线哈希方法在产业级检索系统中的应用提供了实践依据。
 
-综上，本文提出的 SCPH 与 MIH 在概念漂移场景下均表现出较好的检索性能与稳定性，验证了方法设计的有效性。本文工作可为动态数据环境下哈希检索方法的研究与应用提供参考，对开放、动态数据环境中的高效智能检索具有理论意义与应用价值。
+在实验验证方面，本文分别基于CIFAR-10/CIFAR-100与MIRFlickr/MSCOCO构建了“新类出现”和“数据分布改变”两类典型概念漂移场景，与多种静态与在线哈希基线方法进行对比。实验结果表明：SCPH与MIH在多时间步检索过程中均能保持更优或更稳定的性能表现；在概念漂移发生后的关键阶段，所提方法表现出更强的自适应能力；消融实验进一步验证了概念约束、多表保留、模态一致性加权与查询自适应加权等关键模块的有效性。
+
+综上，本文提出的 SCPH 与 MIH 在概念漂移场景下均表现出较好的检索性能与稳定性，并通过电商智能检索系统验证了方法从算法到工程落地的可行性。本文工作可为动态数据环境下哈希检索方法的研究与应用提供参考，对开放、动态数据环境中的高效智能检索具有理论意义与应用价值。
 \end{cabstract}
-\ckeywords{概念漂移；动态哈希检索；半监督学习；跨模态检索；增量学习；多哈希表}
+\ckeywords{概念漂移；在线哈希检索；半监督学习；跨模态检索；增量学习；多哈希表}
 \begin{eabstract}
 In the context of continuously growing large-scale multimedia data, hashing-based retrieval has become an important technical 
 route for approximate nearest neighbor search due to its low storage cost and high retrieval efficiency. However, most existing 
@@ -25,7 +27,7 @@ When concept drift occurs, the semantic neighborhood relationships learned by ex
 leading to performance degradation. Meanwhile, traditional dynamic update strategies often rely on historical sample re-encoding 
 or full-database reconstruction, which incurs high computational cost and cannot satisfy the real-time requirements of online retrieval. 
 Centered on the core problem of how to achieve efficient and stable online hashing retrieval under concept drift, 
-this thesis conducts a systematic study from both single-modal and cross-modal perspectives.
+this thesis conducts a systematic study from single-modal, cross-modal, and system application perspectives.
 
 For single-modal image retrieval, we propose a Semi-supervised Concept Preserving Hashing method (SCPH). 
 Under a concept-preserving framework, SCPH introduces a semi-supervised mechanism: first, 
@@ -45,6 +47,8 @@ hyperplanes to enhance bit-level discriminability, MIH yields a more fine-graine
 Through a collaborative mechanism of historical information retention, current data distribution adaptation, and query-level fine-grained weighting, 
 MIH effectively improves retrieval accuracy and stability in concept-drifting cross-modal environments.
 
+Building on the above algorithmic work, Chapter~5 of this thesis presents the design and implementation of an e-commerce intelligent retrieval system based on online hashing. The system centers on SCPH and MIH as core engines, adopts a five-layer architecture comprising data ingestion, feature engineering, core hashing engine, index storage, and business service layers, and implements three main functions: similar product recommendation, photo-based search, and natural language search. It realizes an end-to-end pipeline from data ingestion, feature extraction, and hash encoding to index retrieval and business services. Systematic testing verifies that SCPH and MIH are deployable in practice and that online incremental updates and retrieval stability are achieved without re-encoding historical hash codes, providing a practical basis for applying online hashing methods in industrial-scale retrieval systems.
+
 In the experimental evaluation, we construct two typical concept drift scenarios—new class emergence and data distribution 
 shift—on CIFAR-10/CIFAR-100 and MIRFlickr/MSCOCO, and compare with multiple static and online hashing baselines. 
 Results show that both SCPH and MIH maintain better or more stable performance over multiple time steps; at key 
@@ -52,7 +56,7 @@ stages after concept drift occurs, the proposed methods demonstrate stronger ada
 verify the effectiveness of key components, including concept constraints, multi-table retention, 
 modality-consistency weighting, and query-adaptive weighting.
 
-In summary, the proposed SCPH and MIH achieve robust retrieval performance and stability under concept drift, validating the effectiveness of the method design. This work provides a useful reference for the study and application of hashing-based retrieval in dynamic data environments, and has both theoretical relevance and practical value for efficient intelligent retrieval in open and evolving settings.
+In summary, the proposed SCPH and MIH achieve robust retrieval performance and stability under concept drift, and the e-commerce intelligent retrieval system validates the feasibility of the methods from algorithm to engineering deployment. This work provides a useful reference for the study and application of hashing-based retrieval in dynamic data environments, and has both theoretical relevance and practical value for efficient intelligent retrieval in open and evolving settings.
 \end{eabstract}
-\ekeywords{Concept Drift; Online Hash Retrieval; Semi-supervised Learning; Cross-modal Retrieval; Incremental Learning; Muti-hash Table}
+\ekeywords{Concept Drift; Online Hashing Retrieval; Semi-supervised Learning; Cross-modal Retrieval; Incremental Learning; Multi-hash Table}
 
