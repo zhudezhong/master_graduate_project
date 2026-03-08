@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import torch
 
-from app.core.config import Settings
+from app.core.config import Settings, settings
 from model.mih import FCMHConfig, MIHConfig, MIHEngine
 from model.scph import SCPHConfig, SCPHEngine
 
@@ -34,10 +34,12 @@ class HashEngineService:
         )
 
     def update_scph(self, image_feats: torch.Tensor, labels: torch.Tensor) -> HashUpdateResult:
+        """更新SCPH哈希模型"""
         self.scph.fit_batch(x_l=image_feats, y_l=labels)
         return HashUpdateResult(mode="scph", num_samples=image_feats.shape[0])
 
     def update_mih(self, image_feats: torch.Tensor, text_feats: torch.Tensor, labels: torch.Tensor, ids: torch.Tensor) -> HashUpdateResult:
+        """更新MIH哈希模型"""
         ret = self.mih.fit_batch(x1=image_feats, x2=text_feats, labels=labels, ids=ids)
         return HashUpdateResult(
             mode="mih",
@@ -53,3 +55,13 @@ class HashEngineService:
     def encode_mih_query(self, feature: torch.Tensor, modality: str, topk: int) -> dict[str, torch.Tensor]:
         q = feature.unsqueeze(0)
         return self.mih.search(q, query_modality=modality, topk=topk)
+
+
+_hash_engine_singleton: HashEngineService | None = None
+
+
+def get_hash_engine_singleton() -> HashEngineService:
+    global _hash_engine_singleton
+    if _hash_engine_singleton is None:
+        _hash_engine_singleton = HashEngineService(settings)
+    return _hash_engine_singleton

@@ -10,3 +10,10 @@ export interface RetrievalResponse {
   results: RetrievalItem[];
   diagnostics: Record<string, unknown>;
 }
+
+export interface ProductDisplayItem {
+  product_id: number;
+  title: string;
+  description: string;
+  image_url: string;
+}

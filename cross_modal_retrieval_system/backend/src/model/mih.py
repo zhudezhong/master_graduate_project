@@ -151,6 +151,9 @@ class FCMHEngine:
             raise ValueError("empty batch is not allowed.")
 
         l_n_c = _as_label_matrix(labels).to(device=self.device, dtype=self.dtype)
+        # Accept both [n, c] and [c, n] shaped labels; normalize to [n, c].
+        if l_n_c.shape[0] != n and l_n_c.ndim == 2 and l_n_c.shape[1] == n:
+            l_n_c = l_n_c.T.contiguous()
         if l_n_c.shape[0] != n:
             raise ValueError("labels sample count mismatch with x1/x2.")
         l_n_c = (l_n_c > 0).to(self.dtype)

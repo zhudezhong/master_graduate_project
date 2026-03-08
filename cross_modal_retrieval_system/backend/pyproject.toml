@@ -10,15 +10,19 @@ readme = "../README.md"
 requires-python = ">=3.12"
 dependencies = [
     "confluent-kafka",
+    "datasets>=4.6.1",
     "fastapi",
+    "h5py>=3.15.1",
     "httpx",
     "numpy>=2.4.2",
     "pillow",
     "pydantic-settings",
     "pymilvus",
     "python-multipart",
+    "scipy>=1.17.1",
     "torch",
     "torchvision",
+    "transformers>=5.3.0",
     "uvicorn",
 ]
 

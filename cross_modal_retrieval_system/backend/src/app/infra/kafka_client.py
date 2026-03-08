@@ -1,7 +1,7 @@
 import json
 from typing import Any
 
-from app.core.config import Settings
+from app.core.config import Settings, settings
 
 try:
     from confluent_kafka import Consumer, Producer
@@ -15,12 +15,11 @@ class ProductQueue:
         self.settings = settings
         self._producer = None
         self._consumer = None
-        self._memory_queue: list[dict[str, Any]] = []
         self._init_clients()
 
     def _init_clients(self) -> None:
-        if self.settings.use_mock_queue or Producer is None:
-            return
+        if Producer is None or Consumer is None:
+            raise RuntimeError("confluent_kafka is required but not installed.")
         try:
             self._producer = Producer({"bootstrap.servers": self.settings.kafka_bootstrap_servers})
             self._consumer = Consumer(
@@ -31,30 +30,21 @@ class ProductQueue:
                 }
             )
             self._consumer.subscribe([self.settings.kafka_product_topic])
-        except Exception:
-            self._producer = None
-            self._consumer = None
+        except Exception as exc:
+            raise RuntimeError(f"failed to initialize Kafka clients: {exc}") from exc
 
     def publish_product(self, payload: dict[str, Any]) -> None:
         if self._producer is None:
-            self._memory_queue.append(payload)
-            return
+            raise RuntimeError("Kafka producer is not initialized.")
         self._producer.produce(self.settings.kafka_product_topic, json.dumps(payload).encode("utf-8"))
         self._producer.flush()
-
-    def drain_mock_messages(self) -> list[dict[str, Any]]:
-        rows = list(self._memory_queue)
-        self._memory_queue.clear()
-        return rows
 
     def consume_products(self, max_messages: int, timeout_seconds: float = 5.0) -> list[dict[str, Any]]:
         if max_messages <= 0:
             return []
 
         if self._consumer is None:
-            rows = self._memory_queue[:max_messages]
-            self._memory_queue = self._memory_queue[max_messages:]
-            return rows
+            raise RuntimeError("Kafka consumer is not initialized.")
 
         messages: list[dict[str, Any]] = []
         idle_polls = 0
@@ -77,3 +67,13 @@ class ProductQueue:
                 continue
 
         return messages
+
+
+_product_queue_singleton: ProductQueue | None = None
+
+
+def get_product_queue_singleton() -> ProductQueue:
+    global _product_queue_singleton
+    if _product_queue_singleton is None:
+        _product_queue_singleton = ProductQueue(settings)
+    return _product_queue_singleton

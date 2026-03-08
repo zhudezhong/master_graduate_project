@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+import h5py
+import numpy as np
 import torch
 
 
@@ -11,6 +14,8 @@ def _pick_device(device: Optional[str] = None) -> torch.device:
         return torch.device(device)
     if torch.backends.mps.is_available():
         return torch.device("mps")
+    if torch.cuda.is_available():
+        return torch.device("cuda")
     return torch.device("cpu")
 
 
@@ -206,9 +211,63 @@ class SCPHEngine:
             "used_pool_indices": list(self._used_pool_indices),
         }
 
+def pre_train_scph():
+    """
+    Pre-train SCPH using CIFAR-10 GIST feature matrix.
+
+    Expected MAT content shape: [60000, 513]
+    - first 512 columns: GIST feature
+    - last column: class label
+    """
+    device = _pick_device()
+
+    mat_path = Path(__file__).resolve().parents[2] / "data" / "cifar-10" / "CIFAR10_GIST_0_20150519.mat"
+    if not mat_path.exists():
+        raise FileNotFoundError(f"CIFAR-10 GIST file not found: {mat_path}")
+
+    matrix: np.ndarray | None = None
+    with h5py.File(mat_path, "r") as f:
+        for key in f.keys():
+            arr = np.asarray(f[key])
+            if arr.ndim != 2:
+                continue
+            if arr.shape[1] == 513:
+                matrix = arr
+                break
+            if arr.shape[0] == 513:
+                matrix = arr.T
+                break
+
+    if matrix is None:
+        raise ValueError(f"Cannot find a [N, 513] matrix in MAT file: {mat_path}")
+
+    x = torch.from_numpy(matrix[:, :-1].astype(np.float32, copy=False)).to(device)
+    y = torch.from_numpy(matrix[:, -1].astype(np.int64, copy=False).reshape(-1)).to(device)
+
+    # Shuffle before pre-train so each batch keeps class distribution closer to global.
+    g = torch.Generator(device=device)
+    g.manual_seed(42)
+    perm = torch.randperm(x.shape[0], generator=g, device=device)
+    x = x[perm]
+    y = y[perm]
+
+    engine = SCPHEngine(SCPHConfig(hash_bits=64, device=device))
+
+    # Train in 10 mini-batches.
+    n_batches = 10
+    batch_size = (x.shape[0] + n_batches - 1) // n_batches
+    for i in range(n_batches):
+        start = i * batch_size
+        end = min((i + 1) * batch_size, x.shape[0])
+        if start >= end:
+            break
+        engine.fit_batch(x_l=x[start:end], y_l=y[start:end])
+
+    return engine
+
+
 if __name__ == "__main__":
-    h_order = _next_power_of_two(64)
-    h = _hadamard(h_order, torch.device("mps"), torch.float32)
-    print(h.shape)
-    print()
-    print(h)
+    model = pre_train_scph()
+    if model.W is None:
+        raise RuntimeError("SCPH pre-train failed: projection matrix W is empty.")
+    print(f"SCPH pre-train done, W shape={tuple(model.W.shape)}")

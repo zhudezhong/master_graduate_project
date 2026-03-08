@@ -88,14 +88,18 @@ This stack includes:
 Notes:
 - In `docker-compose.yml`, backend is configured with `USE_MOCK_QUEUE=false` and uses Kafka directly.
 - `nginx` serves frontend static files and reverse proxies `/api/*` to backend.
-- Milvus is exposed only inside the compose network (no host port mapping) to avoid local port conflicts.
+- `nginx` backend upstream is switchable via `NGINX_BACKEND_UPSTREAM`:
+  - default (container backend): `backend:8000`
+  - local debug backend: `host.docker.internal:8000`
+- Example local-debug mode:
+  - `NGINX_BACKEND_UPSTREAM=host.docker.internal:8000 docker compose up -d --build nginx`
+- Milvus gRPC is mapped to host `19530`, so local backend can connect with `MILVUS_URI=http://127.0.0.1:19530`.
 
 ## Implemented APIs
 
 - `POST /api/v1/ingest/products`
 - `POST /api/v1/ingest/replay` (consume from Kafka topic and replay indexing)
 - `POST /api/v1/hash/update`
-- `POST /api/v1/retrieval/similar`
 - `POST /api/v1/retrieval/similar-image`
 - `POST /api/v1/retrieval/photo-search`
 - `POST /api/v1/retrieval/text-search`

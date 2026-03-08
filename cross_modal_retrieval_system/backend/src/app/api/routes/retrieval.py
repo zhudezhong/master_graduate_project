@@ -2,24 +2,18 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from app.api.deps import get_container
 from app.infra.container import AppContainer
-from app.schemas.retrieval import SimilarRetrievalRequest, TextSearchRequest
+from app.schemas.retrieval import ProductDisplayItem, SimilarRetrievalRequest, TextSearchRequest
 
 router = APIRouter()
 
 
-@router.post("/similar")
-def similar_retrieval(
-    req: SimilarRetrievalRequest,
+@router.get("/products", response_model=list[ProductDisplayItem])
+def list_products(
+    limit: int = 12,
     container: AppContainer = Depends(get_container),
 ):
-    try:
-        return container.retrieval_service.similar_by_product(
-            product_id=req.product_id,
-            top_k=req.top_k,
-            category_filter=req.category_filter,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    safe_limit = max(1, min(limit, 100))
+    return container.retrieval_service.list_products_for_display(limit=safe_limit)
 
 
 @router.post("/similar-image")
@@ -39,6 +33,21 @@ async def similar_by_image(
             category_filter=[],
         )
     except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/similar-product")
+def similar_by_product(
+    req: SimilarRetrievalRequest,
+    container: AppContainer = Depends(get_container),
+):
+    try:
+        return container.retrieval_service.similar_by_product_id(
+            product_id=req.product_id,
+            top_k=req.top_k,
+            category_filter=req.category_filter,
+        )
+    except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 

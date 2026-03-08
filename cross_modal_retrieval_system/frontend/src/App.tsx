@@ -1,20 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { photoSearch, similarByImage, similarByProduct, textSearch } from "./api";
-import type { RetrievalItem, RetrievalResponse } from "./types";
+import { listDisplayProducts, photoSearch, similarByImage, similarByProduct, textSearch } from "./api";
+import type { ProductDisplayItem, RetrievalItem, RetrievalResponse } from "./types";
 
 type Mode = "similar" | "photo" | "text";
 
-type ProductOption = { id: number; title: string; img: string };
-
-const productOptions: ProductOption[] = [
-  { id: 1, title: "运动鞋", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&h=200&fit=crop" },
-  { id: 2, title: "休闲鞋", img: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=200&h=200&fit=crop" },
-  { id: 3, title: "外套", img: "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=200&h=200&fit=crop" },
-  { id: 4, title: "背包", img: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=200&h=200&fit=crop" },
-  { id: 5, title: "手表", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop" },
-  { id: 6, title: "耳机", img: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=200&h=200&fit=crop" }
-];
+type ProductOption = { id: number; title: string; img: string; description: string };
 
 function makeFallbackImage(title: string, id: number): string {
   const safeTitle = encodeURIComponent(title);
@@ -46,8 +37,7 @@ function toResultCards(rows: RetrievalItem[]) {
     id: r.product_id,
     title: (r.payload?.title as string | undefined) ?? `商品 #${r.product_id}`,
     price: (r.payload?.price as string | undefined) ?? "¥--",
-    img: resolveImage(r.payload ?? {}, (r.payload?.title as string | undefined) ?? `商品 #${r.product_id}`, r.product_id),
-    similarity: Math.max(0, Math.min(1, 1 - r.score / 64))
+    img: resolveImage(r.payload ?? {}, (r.payload?.title as string | undefined) ?? `商品 #${r.product_id}`, r.product_id)
   }));
 }
 
@@ -82,7 +72,6 @@ function ResultSection({ response }: { response: RetrievalResponse | null }) {
                   img.src = makeFallbackImage(p.title, p.id);
                 }}
               />
-              <span className="similarity-tag">{Math.round(p.similarity * 100)}%</span>
             </div>
             <div className="info">
               <div className="title">{p.title}</div>
@@ -98,7 +87,8 @@ function ResultSection({ response }: { response: RetrievalResponse | null }) {
 export function App() {
   const [mode, setMode] = useState<Mode>("similar");
 
-  const [selectedProductId, setSelectedProductId] = useState(1);
+  const [productOptions, setProductOptions] = useState<ProductOption[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [similarUploadFile, setSimilarUploadFile] = useState<File | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState("");
@@ -117,9 +107,35 @@ export function App() {
     return "以文搜商品 · 复杂语义搜索（MIH）";
   }, [mode]);
   const selectedProduct = useMemo(
-    () => productOptions.find((p) => p.id === selectedProductId),
-    [selectedProductId]
+    () => productOptions.find((p) => p.id === selectedProductId) ?? null,
+    [productOptions, selectedProductId]
   );
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const rows = await listDisplayProducts(12);
+        if (!alive) return;
+        const mapped: ProductOption[] = rows.map((p: ProductDisplayItem) => ({
+          id: p.product_id,
+          title: p.title || `商品 #${p.product_id}`,
+          img: p.image_url || makeFallbackImage(p.title || `商品 #${p.product_id}`, p.product_id),
+          description: p.description || ""
+        }));
+        setProductOptions(mapped);
+        if (mapped.length > 0) {
+          setSelectedProductId(mapped[0].id);
+        }
+      } catch (e) {
+        if (!alive) return;
+        setError(e instanceof Error ? e.message : "加载商品列表失败");
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   function handlePreview(file: File, setter: (v: string) => void) {
     const reader = new FileReader();
@@ -131,7 +147,11 @@ export function App() {
     setLoading(true);
     setError("");
     try {
-      const ret = await similarByProduct(selectedProductId, 6);
+      const product = selectedProduct;
+      if (!product) {
+        throw new Error("请先选择一个商品");
+      }
+      const ret = await similarByProduct(product.id, 15);
       setSimilarResponse(ret);
     } catch (e) {
       setError(e instanceof Error ? e.message : "检索失败");
@@ -145,7 +165,7 @@ export function App() {
     setLoading(true);
     setError("");
     try {
-      const ret = await similarByImage(similarUploadFile, 6);
+      const ret = await similarByImage(similarUploadFile, 15);
       setSimilarResponse(ret);
     } catch (e) {
       setError(e instanceof Error ? e.message : "检索失败");
@@ -159,7 +179,7 @@ export function App() {
     setLoading(true);
     setError("");
     try {
-      const ret = await photoSearch(photoFile, 6);
+      const ret = await photoSearch(photoFile, 15);
       setPhotoResponse(ret);
     } catch (e) {
       setError(e instanceof Error ? e.message : "检索失败");
@@ -173,7 +193,7 @@ export function App() {
     setLoading(true);
     setError("");
     try {
-      const ret = await textSearch(textQuery.trim(), 6);
+      const ret = await textSearch(textQuery.trim(), 15);
       setTextResponse(ret);
     } catch (e) {
       setError(e instanceof Error ? e.message : "检索失败");
@@ -209,11 +229,19 @@ export function App() {
         <div className={`tab-content ${mode === "similar" ? "active" : ""}`}>
           <div className="search-panel">
             <h3><span className="icon">📷</span> {modeTitle}</h3>
-            <p className="panel-desc">选择商品直接检索相似款；也可上传商品图片进行同类推荐</p>
+            <p className="panel-desc">当前展示的是 Kafka 增量入库后的商品图片与描述；可直接选中检索相似款</p>
             <div className="product-selector">
               {productOptions.map((p) => (
                 <button key={p.id} className={`product-option ${selectedProductId === p.id ? "selected" : ""}`} onClick={() => setSelectedProductId(p.id)}>
-                  <img src={p.img} alt={p.title} />
+                  <img
+                    src={p.img}
+                    alt={p.title}
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      img.onerror = null;
+                      img.src = makeFallbackImage(p.title, p.id);
+                    }}
+                  />
                 </button>
               ))}
             </div>
@@ -221,19 +249,19 @@ export function App() {
               <div className="selected-product-card">
                 <div className="selected-product-thumb">
                   <img
-                    src={selectedProduct?.img ?? makeFallbackImage("当前选中商品", selectedProductId)}
+                    src={selectedProduct?.img ?? makeFallbackImage("当前选中商品", selectedProductId ?? -1)}
                     alt={selectedProduct?.title ?? "当前选中商品"}
                     onError={(e) => {
                       const img = e.currentTarget;
                       img.onerror = null;
-                      img.src = makeFallbackImage(selectedProduct?.title ?? "当前选中商品", selectedProductId);
+                      img.src = makeFallbackImage(selectedProduct?.title ?? "当前选中商品", selectedProductId ?? -1);
                     }}
                   />
                 </div>
                 <div className="selected-product-meta">
                   <span>当前选中商品</span>
                   <strong>{selectedProduct?.title ?? "未选择"}</strong>
-                  <em>ID: {selectedProductId}</em>
+                  <small>{selectedProduct?.description ?? ""}</small>
                 </div>
               </div>
               <div className="similar-primary-actions">

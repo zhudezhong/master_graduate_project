@@ -32,14 +32,6 @@ def main() -> None:
     print("POST /ingest/products")
     print(client.post("/api/v1/ingest/products", json=ingest_payload).json())
 
-    print("POST /retrieval/similar")
-    print(
-        client.post(
-            "/api/v1/retrieval/similar",
-            json={"product_id": 11, "top_k": 3, "category_filter": []},
-        ).json()
-    )
-
     print("POST /retrieval/text-search")
     print(
         client.post(

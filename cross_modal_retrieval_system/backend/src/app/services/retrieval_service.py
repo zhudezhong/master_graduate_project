@@ -1,8 +1,9 @@
 import time
 
 from app.infra.catalog import ProductCatalog
-from app.infra.milvus_client import MilvusRepository
+from app.infra.milvus_client import IndexRecord, MilvusRepository
 from app.schemas.common import RetrievalItem, RetrievalResponse
+from app.schemas.retrieval import ProductDisplayItem
 from app.services.feature_service import FeatureService
 from app.services.hash_service import HashEngineService
 
@@ -20,17 +21,6 @@ class RetrievalService:
         self.hash_service = hash_service
         self.milvus_repo = milvus_repo
 
-    def similar_by_product(self, product_id: int, top_k: int, category_filter: list[int]) -> RetrievalResponse:
-        start = time.perf_counter()
-        product = self.catalog.get(product_id)
-        if product is None:
-            raise ValueError(f"product_id {product_id} not found")
-        image_feat, _ = self.feature_service.product_features(product)
-        code = self.hash_service.encode_image_scph(image_feat)
-        rows = self.milvus_repo.search_scph(code, top_k=top_k, category_filter=category_filter)
-        results = [RetrievalItem(product_id=r.product_id, score=dist, payload=r.payload) for r, dist in rows]
-        return RetrievalResponse(latency_ms=int((time.perf_counter() - start) * 1000), results=results)
-
     def similar_by_uploaded_image(
         self,
         image_bytes: bytes,
@@ -41,7 +31,7 @@ class RetrievalService:
         start = time.perf_counter()
         image_feat = self.feature_service.image_from_bytes(image_bytes, filename=filename)
         code = self.hash_service.encode_image_scph(image_feat)
-        rows = self.milvus_repo.search_scph(code, top_k=top_k, category_filter=category_filter)
+        rows = self.milvus_repo.search_products_by_scph_code(code, top_k=top_k, category_filter=category_filter)
         results = [RetrievalItem(product_id=r.product_id, score=dist, payload=r.payload) for r, dist in rows]
         return RetrievalResponse(latency_ms=int((time.perf_counter() - start) * 1000), results=results)
 
@@ -64,3 +54,29 @@ class RetrievalService:
         rows = self.milvus_repo.search_mih_by_ids(ids, distances)
         results = [RetrievalItem(product_id=r.product_id, score=dist, payload=r.payload) for r, dist in rows]
         return RetrievalResponse(latency_ms=int((time.perf_counter() - start) * 1000), results=results)
+
+    def similar_by_product_id(self, product_id: int, top_k: int, category_filter: list[int]) -> RetrievalResponse:
+        start = time.perf_counter()
+        base = self.milvus_repo.get_product(product_id)
+        if base is None:
+            raise ValueError(f"product_id {product_id} not found")
+        rows = self.milvus_repo.search_products_by_scph_code(base.code, top_k=top_k, category_filter=category_filter)
+        results = [RetrievalItem(product_id=r.product_id, score=dist, payload=r.payload) for r, dist in rows]
+        return RetrievalResponse(latency_ms=int((time.perf_counter() - start) * 1000), results=results)
+
+    def list_products_for_display(self, limit: int) -> list[ProductDisplayItem]:
+        records = self.milvus_repo.list_products(limit=limit)
+        out: list[ProductDisplayItem] = []
+        for rec in records:
+            title = str(rec.payload.get("title", "")).strip() or f"商品 #{rec.product_id}"
+            description = str(rec.payload.get("description", "")).strip()
+            image_url = str(rec.payload.get("image_url", "")).strip()
+            out.append(
+                ProductDisplayItem(
+                    product_id=rec.product_id,
+                    title=title,
+                    description=description,
+                    image_url=image_url,
+                )
+            )
+        return out

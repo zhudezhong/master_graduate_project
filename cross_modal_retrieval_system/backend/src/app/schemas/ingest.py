@@ -7,6 +7,7 @@ class ProductIngestRecord(BaseModel):
     title: str
     description: str = ""
     category_ids: list[int] = Field(default_factory=list)
+    industry_id: int | None = None
     timestamp: int
     attributes: dict[str, str] = Field(default_factory=dict)
 

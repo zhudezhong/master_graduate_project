@@ -28,47 +28,6 @@ def _build_client() -> TestClient:
     return TestClient(create_app())
 
 
-def test_ingest_then_similar_search() -> None:
-    client = _build_client()
-
-    ingest_res = client.post(
-        "/api/v1/ingest/products",
-        json={
-            "products": [
-                {
-                    "product_id": 1,
-                    "image_url": "https://example.com/1.jpg",
-                    "title": "黑色马丁靴",
-                    "description": "复古风格",
-                    "category_ids": [10],
-                    "timestamp": 1700000000,
-                    "attributes": {"season": "winter"},
-                },
-                {
-                    "product_id": 2,
-                    "image_url": "https://example.com/2.jpg",
-                    "title": "棕色马丁靴",
-                    "description": "秋冬穿搭",
-                    "category_ids": [10],
-                    "timestamp": 1700000001,
-                    "attributes": {"season": "autumn"},
-                },
-            ]
-        },
-    )
-    assert ingest_res.status_code == 200
-
-    similar_res = client.post(
-        "/api/v1/retrieval/similar",
-        json={"product_id": 1, "top_k": 5, "category_filter": []},
-    )
-    assert similar_res.status_code == 200
-    body = similar_res.json()
-    assert "request_id" in body
-    assert "latency_ms" in body
-    assert len(body["results"]) >= 1
-
-
 def test_text_search_and_hash_update() -> None:
     client = _build_client()
 

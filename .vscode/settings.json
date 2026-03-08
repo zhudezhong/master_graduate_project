@@ -30,5 +30,8 @@
     "[latex]": {
         "editor.wordWrap": "wordWrapColumn",
         "editor.wordWrapColumn": 100
-    }
+    },
+
+    "python.defaultInterpreterPath": "${workspaceFolder}/cross_modal_retrieval_system/backend/.venv/bin/python",
+    "python.terminal.activateEnvironment": true
 }

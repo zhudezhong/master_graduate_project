@@ -69,6 +69,8 @@
 \let\cleardoublepagemp\clearpage
 % 全文公式编号格式：章号-序号（如 2-1）
 \renewcommand{\theequation}{\thechapter-\arabic{equation}}
+% 全文图片编号格式：章号-序号（如 图 5-4）
+\renewcommand{\thefigure}{\thechapter-\arabic{figure}}
 \begin{document}
 \graphicspath{{figures/}}
 \input{data/info}

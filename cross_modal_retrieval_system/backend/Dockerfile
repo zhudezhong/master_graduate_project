@@ -7,9 +7,11 @@ ENV PYTHONUNBUFFERED=1
 
 RUN pip install --no-cache-dir \
     numpy \
+    h5py \
     pillow \
     torch \
     torchvision \
+    transformers \
     fastapi \
     uvicorn \
     pydantic-settings \
