@@ -65,9 +65,11 @@
 \documentclass[master,ttf,twoside]{scnuthesis}
 \usepackage{myscnu}
 \usepackage{bookmark}  % 与 hyperref 配合，减少“Rerun to get outlines right”的重复编译
-% 消除 xeCJK 对 \ttfamily/\sffamily 的警告：指定 CJK 等宽与无衬线字体（macOS 若报错可改为 Kaiti SC / Heiti SC）
-\setCJKmonofont{KaiTi}
-\setCJKsansfont{SimHei}
+% 使用当前项目根目录下的 SimSun.ttc / SimHei.ttf 作为中文字体
+% 主字体：宋体（SimSun），无衬线和等宽：黑体（SimHei）
+\setCJKmainfont[Path=./, Extension=.ttc]{SimSun}
+\setCJKsansfont[Path=./, Extension=.ttf]{SimHei}
+\setCJKmonofont[Path=./, Extension=.ttf]{SimHei}
 % 保留“章前换页”，但取消 twoside 下的“补空白页到右页”行为
 \let\cleardoublepage\clearpage
 \let\cleardoublepagemp\clearpage
@@ -75,13 +77,12 @@
 \renewcommand{\theequation}{\thechapter-\arabic{equation}}
 % 全文图片编号格式：章号-序号（如 图 5-4）
 \renewcommand{\thefigure}{\thechapter-\arabic{figure}}
-% 章标题：章号单独一行居中，标题在第二行居中（过长时多行均居中）
-\titleformat{\chapter}[display]
+% 章标题：章号和标题同一行居中（过长自动换行且各行居中）
+\titleformat{\chapter}
   {\centering\heiti\xiaoer[1.25]}
   {第\CJKnumber{\thechapter}章}
-  {0.8em}
-  {\parbox{\linewidth}{\centering}}
-  []
+  {1em}
+  {}
 \begin{document}
 \graphicspath{{figures/}}
 \input{data/info}
